@@ -1,7 +1,6 @@
 from .interviewer import InterviewerAgent
 from .evaluator import EvaluatorAgent
 from .feedback import FeedbackAgent
-from .QuestionGeneratorAgent import QuestionGeneratorAgent
 
 
 class Supervisor:
@@ -9,7 +8,7 @@ class Supervisor:
         self.interviewer = InterviewerAgent(question_bank)
         self.evaluator = EvaluatorAgent()
         self.feedback = FeedbackAgent()
-        self.generator = QuestionGeneratorAgent()
+        
 
     def run_interview(self, answers):
         evaluations = []
