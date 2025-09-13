@@ -2,8 +2,8 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 from agents.supervisor import Supervisor
-from fpdf import FPDF
-import unicodedata
+
+# Load environment variables first
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
@@ -126,51 +126,6 @@ elif st.session_state.stage == "results":
 
     st.subheader("📄 Final Performance Summary")
     st.write(st.session_state.summary)
-
-    def create_pdf_report():
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-
-        def sanitize_text(text):
-            
-            normalized_text = unicodedata.normalize('NFKD', str(text))
-            
-            return normalized_text.encode('ascii', 'ignore').decode('ascii')
-
-        pdf.cell(200, 10, txt=sanitize_text("Excel Mock Interview Report Card"), ln=True, align="C")
-        pdf.ln(10)
-
-        for i, (qa, ev) in enumerate(
-            zip(st.session_state.answers, st.session_state.evaluations), 1
-        ):
-           
-            question = sanitize_text(f"Q{i}: {qa['question']}")
-            answer = sanitize_text(f"Answer: {qa['answer']}")
-            score = sanitize_text(f"Score: {ev.get('score', 'N/A')}")
-            justification = sanitize_text(f"Justification: {ev.get('justification', '')}")
-            explanation = sanitize_text(f"Explanation: {ev.get('explanation', '')}")
-            tip = sanitize_text(f"Tip: {ev.get('tip', '')}")
-
-            pdf.multi_cell(0, 10, txt=question)
-            pdf.multi_cell(0, 10, txt=answer)
-            pdf.multi_cell(0, 10, txt=score)
-            pdf.multi_cell(0, 10, txt=justification)
-            pdf.multi_cell(0, 10, txt=explanation)
-            pdf.multi_cell(0, 10, txt=tip)
-            pdf.ln(5)
-
-        pdf.multi_cell(0, 10, txt=sanitize_text("Final Summary:"))
-        pdf.multi_cell(0, 10, txt=sanitize_text(st.session_state.summary))
-
-        return pdf.output(dest="S")
-
-    st.download_button(
-        "📥 Download Report Card (PDF)",
-        data=create_pdf_report(),
-        file_name="report_card.pdf",
-        mime="application/pdf",
-    )
 
     if st.button("Restart Interview"):
         st.session_state.stage = "welcome"
