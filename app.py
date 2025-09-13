@@ -8,7 +8,7 @@ from fpdf import FPDF
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
-    st.error("GOOGLE_API_KEY not found. Add it to your .env file.")
+    st.error("GOOGLE_API_KEY not found. Add it to your .env file or Streamlit secrets.")
     st.stop()
 
 # Question Bank
@@ -17,16 +17,25 @@ CURATED_QUESTIONS = {
         "What is the difference between relative and absolute references in Excel?",
         "How do you remove duplicate rows from a dataset?",
         "How do you create a simple bar chart?",
+        "What is the order of operations in Excel formulas?",
+        "How do you freeze panes and why is it useful?",
+        "Explain the purpose of the SUMIF function with an example.",
     ],
     "intermediate": [
         "Explain how VLOOKUP works with an example.",
         "What are Pivot Tables used for in Excel?",
         "How would you apply conditional formatting to highlight values greater than 100?",
+        "What is the difference between VLOOKUP and INDEX/MATCH?",
+        "How do you create a drop-down list in a cell?",
+        "Describe how to use the Text to Columns feature.",
     ],
     "advanced": [
         "Explain array formulas and how dynamic arrays improve analysis.",
         "How would you use Solver to optimize a business scenario?",
         "How do you protect specific cells in a shared Excel sheet?",
+        "What are Power Query and Power Pivot, and how do they extend Excel's capabilities?",
+        "How would you create a custom function using VBA?",
+        "Explain a complex data validation scenario you might implement.",
     ],
 }
 
@@ -41,9 +50,9 @@ st.write(
 )
 
 st.sidebar.header("Interview Settings")
-num_basic = st.sidebar.slider("Basic Questions", 0, 3, 1)
-num_inter = st.sidebar.slider("Intermediate Questions", 0, 3, 1)
-num_adv = st.sidebar.slider("Advanced Questions", 0, 3, 1)
+num_basic = st.sidebar.slider("Basic Questions", 0, 6, 1)
+num_inter = st.sidebar.slider("Intermediate Questions", 0, 6, 1)
+num_adv = st.sidebar.slider("Advanced Questions", 0, 6, 1)
 
 if "stage" not in st.session_state:
     st.session_state.stage = "welcome"
@@ -119,28 +128,44 @@ elif st.session_state.stage == "results":
     st.subheader("📄 Final Performance Summary")
     st.write(st.session_state.summary)
 
+    # --- CORRECTED PDF GENERATION FUNCTION ---
     def create_pdf_report():
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="Excel Mock Interview Report Card", ln=True, align="C")
+
+        # Helper function to remove characters that FPDF's latin-1 encoding can't handle
+        def sanitize_text(text):
+            return str(text).encode('latin-1', 'replace').decode('latin-1')
+
+        # Sanitize and write the main title
+        pdf.cell(200, 10, txt=sanitize_text("Excel Mock Interview Report Card"), ln=True, align="C")
         pdf.ln(10)
 
         for i, (qa, ev) in enumerate(
             zip(st.session_state.answers, st.session_state.evaluations), 1
         ):
-            pdf.multi_cell(0, 10, txt=f"Q{i}: {qa['question']}")
-            pdf.multi_cell(0, 10, txt=f"Answer: {qa['answer']}")
-            pdf.multi_cell(0, 10, txt=f"Score: {ev.get('score', 'N/A')}")
-            pdf.multi_cell(0, 10, txt=f"Justification: {ev.get('justification', '')}")
-            pdf.multi_cell(0, 10, txt=f"Explanation: {ev.get('explanation', '')}")
-            pdf.multi_cell(0, 10, txt=f"Tip: {ev.get('tip', '')}")
+            # Sanitize all text before passing it to the PDF methods
+            question = sanitize_text(f"Q{i}: {qa['question']}")
+            answer = sanitize_text(f"Answer: {qa['answer']}")
+            score = sanitize_text(f"Score: {ev.get('score', 'N/A')}")
+            justification = sanitize_text(f"Justification: {ev.get('justification', '')}")
+            explanation = sanitize_text(f"Explanation: {ev.get('explanation', '')}")
+            tip = sanitize_text(f"Tip: {ev.get('tip', '')}")
+
+            pdf.multi_cell(0, 10, txt=question)
+            pdf.multi_cell(0, 10, txt=answer)
+            pdf.multi_cell(0, 10, txt=score)
+            pdf.multi_cell(0, 10, txt=justification)
+            pdf.multi_cell(0, 10, txt=explanation)
+            pdf.multi_cell(0, 10, txt=tip)
             pdf.ln(5)
 
-        pdf.multi_cell(0, 10, txt="Final Summary:")
-        pdf.multi_cell(0, 10, txt=st.session_state.summary)
+        pdf.multi_cell(0, 10, txt=sanitize_text("Final Summary:"))
+        pdf.multi_cell(0, 10, txt=sanitize_text(st.session_state.summary))
 
-        return pdf.output(dest="S").encode("latin-1")
+        # The .output() method with dest="S" returns bytes, which is what the download button needs.
+        return pdf.output(dest="S")
 
     st.download_button(
         "📥 Download Report Card (PDF)",
@@ -152,3 +177,4 @@ elif st.session_state.stage == "results":
     if st.button("Restart Interview"):
         st.session_state.stage = "welcome"
         st.rerun()
+
