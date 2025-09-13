@@ -3,8 +3,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from agents.supervisor import Supervisor
 from fpdf import FPDF
-
-# Load environment variables first
+import unicodedata
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
@@ -128,24 +127,24 @@ elif st.session_state.stage == "results":
     st.subheader("📄 Final Performance Summary")
     st.write(st.session_state.summary)
 
-    # --- CORRECTED PDF GENERATION FUNCTION ---
     def create_pdf_report():
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
 
-        # Helper function to remove characters that FPDF's latin-1 encoding can't handle
         def sanitize_text(text):
-            return str(text).encode('latin-1', 'replace').decode('latin-1')
+            
+            normalized_text = unicodedata.normalize('NFKD', str(text))
+            
+            return normalized_text.encode('ascii', 'ignore').decode('ascii')
 
-        # Sanitize and write the main title
         pdf.cell(200, 10, txt=sanitize_text("Excel Mock Interview Report Card"), ln=True, align="C")
         pdf.ln(10)
 
         for i, (qa, ev) in enumerate(
             zip(st.session_state.answers, st.session_state.evaluations), 1
         ):
-            # Sanitize all text before passing it to the PDF methods
+           
             question = sanitize_text(f"Q{i}: {qa['question']}")
             answer = sanitize_text(f"Answer: {qa['answer']}")
             score = sanitize_text(f"Score: {ev.get('score', 'N/A')}")
@@ -164,7 +163,6 @@ elif st.session_state.stage == "results":
         pdf.multi_cell(0, 10, txt=sanitize_text("Final Summary:"))
         pdf.multi_cell(0, 10, txt=sanitize_text(st.session_state.summary))
 
-        # The .output() method with dest="S" returns bytes, which is what the download button needs.
         return pdf.output(dest="S")
 
     st.download_button(
