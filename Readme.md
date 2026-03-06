@@ -6,6 +6,7 @@ The system simulates a technical interview by generating questions, evaluating r
 
 Built using **Python, Streamlit, and Gemini API**.
 
+LINK TO TRY : https://excelinterview.streamlit.app/
 ---
 
 # 🚀 Features
@@ -20,7 +21,7 @@ Built using **Python, Streamlit, and Gemini API**.
 ---
 
 # 🧠 Multi-Agent System Architecture
-
+![alt text](image.png)
 This project follows a **Supervisor-Agent architecture**, where a central orchestrator manages specialized agents.
 User
 │
