@@ -10,7 +10,7 @@ if not API_KEY:
     raise ValueError("GOOGLE_API_KEY not found. Put it in your .env file.")
 
 genai.configure(api_key=API_KEY)
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-2.5-flash"
 
 
 class BaseAgent:
