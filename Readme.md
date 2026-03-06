@@ -22,6 +22,7 @@ LINK TO TRY : https://excelinterview.streamlit.app/
 
 # 🧠 Multi-Agent System Architecture
 ![alt text](image.png)
+
 This project follows a **Supervisor-Agent architecture**, where a central orchestrator manages specialized agents.
 User
 │
